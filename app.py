@@ -48,26 +48,50 @@ finaldf = pd.concat([meandf,highdf,lowdf],axis=1)
 finaldf.columns = ['go','return','go_high','return_high','go_low','return_low']
 returndf = finaldf[['return','return_high','return_low']].copy()
 returndf['time'] = returndf.index.to_list()
-# ------------------------------------------------------------------------------
+goingdf = finaldf[['go','go_high','go_low']].copy()
+goingdf['time'] = goingdf.index.to_list()
+# ==============================================================================
 # Create the plot
+# ==============================================================================
 # ------------------------------------------------------------------------------
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return_high'],name='high',line_shape='spline'))
-fig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return'],name='mean',line_shape='spline'))
-fig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return_low'],name='low',line_shape='spline'))
-fig.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
+# Return graphs
 # ------------------------------------------------------------------------------
-# Building the pages
+returnfig = go.Figure()
+returnfig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return_high'],name='high',line_shape='spline'))
+returnfig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return'],name='mean',line_shape='spline'))
+returnfig.add_trace(go.Scatter(x=returndf['time'],y=returndf['return_low'],name='low',line_shape='spline'))
+returnfig.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
+# ------------------------------------------------------------------------------
+# Going graphs
+# ------------------------------------------------------------------------------
+goingfig = go.Figure()
+goingfig.add_trace(go.Scatter(x=goingdf['time'],y=goingdf['go_high'],name='high',line_shape='spline'))
+goingfig.add_trace(go.Scatter(x=goingdf['time'],y=goingdf['go'],name='mean',line_shape='spline'))
+goingfig.add_trace(go.Scatter(x=goingdf['time'],y=goingdf['go_low'],name='low',line_shape='spline'))
+goingfig.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
+
+# ==============================================================================
+# Building the page
+# ==============================================================================
+# ------------------------------------------------------------------------------
+# Return graphs
+# ------------------------------------------------------------------------------
+layout = []
+layout.append(html.H1(children='Return'))
+layout.append(dcc.Graph(figure=returnfig))
+layout.append(html.H1(children='Going'))
+layout.append(dcc.Graph(figure=goingfig))
+# ------------------------------------------------------------------------------
+# Going graphs
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Initialize the page in the app
 # ------------------------------------------------------------------------------
 es = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=es)
 
 
-
-
-app.layout = html.Div(children=[
-    html.H1(children='Return'),
-    dcc.Graph(figure=fig)])
+app.layout = html.Div(children=layout)
 server = app.server
 # ------------------------------------------------------------------------------
 # Run
