@@ -68,6 +68,7 @@ app = dash.Dash(__name__, external_stylesheets=es)
 app.layout = html.Div(children=[
     html.H1(children='Return'),
     dcc.Graph(figure=fig)])
+server = app.server
 # ------------------------------------------------------------------------------
 # Run
 # ------------------------------------------------------------------------------
