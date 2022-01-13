@@ -45,6 +45,22 @@ stdvdf = df.groupby('time').std()
 highdf = meandf + 2*stdvdf
 lowdf = meandf - 2*stdvdf
 # ------------------------------------------------------------------------------
+# 7-day rolling average
+# ------------------------------------------------------------------------------
+now      = datetime.datetime.combine(datetime.date.today(),datetime.datetime.min.time())
+tmpmask  = pd.to_datetime(df['time']) + datetime.timedelta(days=7) >= now
+wkdf     = df[tmpmask].copy()
+wkmeandf = df.groupby('time').mean()
+wkq1q3df = df.groupby('time').quantile([0.25,0.75]).unstack()
+wkq1q3df.columns = ['go_q1','go_q3','return_q1','return_q3']
+wkmnmxdf = df[['time','go','return']].groupby('time').agg(['min','max'])
+wkmnmxdf.columns = ['go_min','go_max','return_min','return_max']
+wkfinaldf = pd.concat([wkmeandf,wkq1q3df,wkmnmxdf],axis=1)
+returndf3 = wkfinaldf[['return','return_q1','return_q3','return_min','return_max']].copy()
+goingdf3 = wkfinaldf[['go','go_q1','go_q3','go_min','go_max']].copy()
+returndf3['time'] = returndf3.index.to_list()
+goingdf3['time'] = goingdf3.index.to_list()
+# ------------------------------------------------------------------------------
 # Q1/Q3 with mean graph
 # ------------------------------------------------------------------------------
 qrtrdf = df.groupby('time').quantile([0.25,0.75]).unstack()
@@ -94,8 +110,8 @@ returnfig2 = go.Figure()
 returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_q3'],name='q3',line_shape='spline'))
 returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return'],name='mean',line_shape='spline'))
 returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_q1'],name='q1',line_shape='spline'))
-# returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_min'],name='min'))
-# returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_max'],name='max'))
+returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_min'],name='min',mode='markers'))
+returnfig2.add_trace(go.Scatter(x=returndf2['time'],y=returndf2['return_max'],name='max',mode='markers'))
 returnfig2.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
 # ------------------------------------------------------------------------------
 # Going graphs
@@ -104,9 +120,32 @@ goingfig2 = go.Figure()
 goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_q3'],name='q3',line_shape='spline'))
 goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go'],name='mean',line_shape='spline'))
 goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_q1'],name='q1',line_shape='spline'))
-# goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_min'],name='min'))
-# goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_max'],name='max'))
+goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_min'],name='min',mode='markers'))
+goingfig2.add_trace(go.Scatter(x=goingdf2['time'],y=goingdf2['go_max'],name='max',mode='markers'))
 goingfig2.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
+# ==============================================================================
+# Create the plots for min/max/mean/q1/q3 of 7-day rolling
+# ==============================================================================
+# ------------------------------------------------------------------------------
+# Return graphs
+# ------------------------------------------------------------------------------
+returnfig3 = go.Figure()
+returnfig3.add_trace(go.Scatter(x=returndf3['time'],y=returndf3['return_q3'],name='q3',line_shape='spline'))
+returnfig3.add_trace(go.Scatter(x=returndf3['time'],y=returndf3['return'],name='mean',line_shape='spline'))
+returnfig3.add_trace(go.Scatter(x=returndf3['time'],y=returndf3['return_q1'],name='q1',line_shape='spline'))
+returnfig3.add_trace(go.Scatter(x=returndf3['time'],y=returndf3['return_min'],name='min',mode='markers'))
+returnfig3.add_trace(go.Scatter(x=returndf3['time'],y=returndf3['return_max'],name='max',mode='markers'))
+returnfig3.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
+# ------------------------------------------------------------------------------
+# Going graphs
+# ------------------------------------------------------------------------------
+goingfig3 = go.Figure()
+goingfig3.add_trace(go.Scatter(x=goingdf3['time'],y=goingdf3['go_q3'],name='q3',line_shape='spline'))
+goingfig3.add_trace(go.Scatter(x=goingdf3['time'],y=goingdf3['go'],name='mean',line_shape='spline'))
+goingfig3.add_trace(go.Scatter(x=goingdf3['time'],y=goingdf3['go_q1'],name='q1',line_shape='spline'))
+goingfig3.add_trace(go.Scatter(x=goingdf3['time'],y=goingdf3['go_min'],name='min',mode='markers'))
+goingfig3.add_trace(go.Scatter(x=goingdf3['time'],y=goingdf3['go_max'],name='max',mode='markers'))
+goingfig3.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
 
 # ==============================================================================
 # Building the page
@@ -115,6 +154,11 @@ goingfig2.update_layout(xaxis_title='Time of Day',yaxis_title='Time (min)')
 # Return graphs
 # ------------------------------------------------------------------------------
 layout = []
+layout.append(html.H1(children='7-day rolling'))
+layout.append(html.H2(children='Return'))
+layout.append(dcc.Graph(figure=returnfig3))
+layout.append(html.H2(children='Going'))
+layout.append(dcc.Graph(figure=goingfig3))
 layout.append(html.H1(children='Return'))
 layout.append(html.H2(children='Mean and variance graph'))
 layout.append(dcc.Graph(figure=returnfig))
