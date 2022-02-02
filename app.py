@@ -24,15 +24,18 @@ df = pd.read_csv(dat)
 df['return'] = df['return']/60.0
 df['go'] = df['go']/60.0
 # ------------------------------------------------------------------------------
-# Change the time to PST
+# Change the time to PST and get the day of week
 # ------------------------------------------------------------------------------
 time = df['timestamp'].to_list()
 finaltime = []
+day       = []
 for i in time:
     thistime = datetime.datetime.strptime(i,'%Y-%m-%d %H:%M:%S.%f')
     thistime = thistime - datetime.timedelta(hours=8)
     finaltime.append(thistime.strftime('%H:%M'))
+    day.append(thistime.isoweekday())
 df['time'] = finaltime
+df['day']  = day
 # ==============================================================================
 # Sort and group the times
 # ==============================================================================
